@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -22,6 +23,7 @@ var Options struct {
 	HTTPSCAFile           string `envconfig:"HTTPS_CA_FILE"`
 	ListenPort            string `envconfig:"LISTEN_PORT" default:"8080"`
 	RequestAuthType       string `envconfig:"REQUEST_AUTH_TYPE"`
+	RHCOSVersions         string `envconfig:"RHCOS_VERSIONS"`
 }
 
 func main() {
@@ -31,7 +33,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to process config: %v\n", err)
 	}
-	is, err := imagestore.NewImageStore(isoeditor.NewEditor(Options.DataDir), Options.DataDir)
+
+	var versions []map[string]string
+	if Options.RHCOSVersions == "" {
+		versions = imagestore.DefaultVersions
+	} else {
+		err = json.Unmarshal([]byte(Options.RHCOSVersions), &versions)
+		if err != nil {
+			log.Fatalf("Failed to unmarshal versions: %v\n", err)
+		}
+	}
+
+	is, err := imagestore.NewImageStore(isoeditor.NewEditor(Options.DataDir), Options.DataDir, versions)
 	if err != nil {
 		log.Fatalf("Failed to create image store: %v\n", err)
 	}
