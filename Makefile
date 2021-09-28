@@ -12,7 +12,10 @@ lint:
 	golangci-lint run -v
 
 test:
-	go test ./...
+	go test -short ./...
+
+test-integration:
+	go test ./internal/integration/...
 
 generate:
 	go generate $(shell go list ./...)
